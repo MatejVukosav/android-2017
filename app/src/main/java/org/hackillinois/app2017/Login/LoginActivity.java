@@ -54,149 +54,152 @@ public class LoginActivity extends AppCompatActivity {
     TextView loadingText;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        requestManager = RequestManager.getInstance(this);
-        sharedPreferences = this.getSharedPreferences(MainActivity.SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+    public void onCreate( Bundle savedInstanceState ) {
+        super.onCreate( savedInstanceState );
+        requestManager = RequestManager.getInstance( this );
+        sharedPreferences = this.getSharedPreferences( MainActivity.SHARED_PREFS_NAME, Context.MODE_PRIVATE );
         editor = sharedPreferences.edit();
 
-        if (sharedPreferences.getBoolean("hasAuthed", false)) {
+        if ( sharedPreferences.getBoolean( "hasAuthed", false ) ) {
             //TODO: reauth using api
-            Intent intent = new Intent(this, MainActivity.class);
-            startActivity(intent);
+            Intent intent = new Intent( this, MainActivity.class );
+            startActivity( intent );
             this.finish();
         }
 
-        setContentView(R.layout.activity_login);
-        ButterKnife.bind(this);
+        setContentView( R.layout.activity_login );
+        ButterKnife.bind( this );
 
-        Typeface brandon_med = Typeface.createFromAsset(getAssets(), "fonts/Brandon_med.otf");
-        Typeface gotham_med = Typeface.createFromAsset(getAssets(), "fonts/Gotham-Medium.otf");
-        emailField.setTypeface(gotham_med);
-        passwordField.setTypeface(gotham_med);
-        loginButton.setTypeface(gotham_med);
-        incorrectText.setTypeface(brandon_med);
-        loadingText.setTypeface(brandon_med);
+        Typeface brandon_med = Typeface.createFromAsset( getAssets(), "fonts/Brandon_med.otf" );
+        Typeface gotham_med = Typeface.createFromAsset( getAssets(), "fonts/Gotham-Medium.otf" );
+        emailField.setTypeface( gotham_med );
+        passwordField.setTypeface( gotham_med );
+        loginButton.setTypeface( gotham_med );
+        incorrectText.setTypeface( brandon_med );
+        loadingText.setTypeface( brandon_med );
 
-        loginButton.setOnClickListener(new View.OnClickListener() {
+        loginButton.setOnClickListener( new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                if (emailField.getText().toString().isEmpty()) {
-                    emailField.setError("Forget something?");
-                } else if (passwordField.getText().toString().isEmpty()) {
-                    passwordField.setError("Your password goes here!");
+            public void onClick( View v ) {
+                //TODO remove authentification
+                moveOn();
+
+                authorize( emailField.getText().toString(), passwordField.getText().toString() );
+                if ( emailField.getText().toString().isEmpty() ) {
+                    emailField.setError( "Forget something?" );
+                } else if ( passwordField.getText().toString().isEmpty() ) {
+                    passwordField.setError( "Your password goes here!" );
                 } else {
-                    if(Utils.isNetworkAvailable(getApplicationContext())) {
-                        authorize(emailField.getText().toString(), passwordField.getText().toString());
-                    } else  {
-                        Toast.makeText(getApplicationContext(), "Please connect to the internet.", Toast.LENGTH_SHORT).show();
+                    if ( Utils.isNetworkAvailable( getApplicationContext() ) ) {
+                    } else {
+                        Toast.makeText( getApplicationContext(), "Please connect to the internet.", Toast.LENGTH_SHORT ).show();
                     }
                     //loadEvents();
                     // TODO: delete loadEvents() call
                 }
             }
-        });
+        } );
     }
 
-    private void authorize(final String email, final String password) {
-        loginButton.setClickable(false);
+    private void authorize( final String email, final String password ) {
+        loginButton.setClickable( false );
         Map<String, String> params = new HashMap<>();
-        params.put("email", email);
-        params.put("password", password);
+        params.put( "email", email );
+        params.put( "password", password );
 
-        incorrectText.setVisibility(View.INVISIBLE);
-        loadingView.setVisibility(View.VISIBLE);
+        incorrectText.setVisibility( View.INVISIBLE );
+        loadingView.setVisibility( View.VISIBLE );
 
-        final JsonObjectRequest userRequest = new JsonObjectRequest(Request.Method.GET,
+        final JsonObjectRequest userRequest = new JsonObjectRequest( Request.Method.GET,
                 APIHelper.userEndpoint, null, new Response.Listener<JSONObject>() {
             @Override
-            public void onResponse(JSONObject response) {
+            public void onResponse( JSONObject response ) {
                 try {
-                    JSONObject data = response.getJSONObject("data");
+                    JSONObject data = response.getJSONObject( "data" );
 
-                    Log.i("UserData", data.getString("firstName"));
-                    editor.putString("firstName", data.getString("firstName"));
-                    editor.putString("lastName", data.getString("lastName"));
-                    editor.putString("diet", data.getString("diet"));
-                    editor.putString("age", data.getString("age"));
-                    editor.putString("graduationYear", data.getString("graduationYear"));
-                    editor.putString("school", data.getString("school"));
-                    editor.putString("major", data.getString("major"));
-                    editor.putString("github", data.getString("github"));
-                    editor.putString("linkedin", data.getString("linkedin"));
-                    editor.putString("resumeId", data.getJSONObject("resume").getString("id"));
-                    editor.putString("id", data.getString("id"));
-                    editor.putBoolean("hasAuthed", true);
+                    Log.i( "UserData", data.getString( "firstName" ) );
+                    editor.putString( "firstName", data.getString( "firstName" ) );
+                    editor.putString( "lastName", data.getString( "lastName" ) );
+                    editor.putString( "diet", data.getString( "diet" ) );
+                    editor.putString( "age", data.getString( "age" ) );
+                    editor.putString( "graduationYear", data.getString( "graduationYear" ) );
+                    editor.putString( "school", data.getString( "school" ) );
+                    editor.putString( "major", data.getString( "major" ) );
+                    editor.putString( "github", data.getString( "github" ) );
+                    editor.putString( "linkedin", data.getString( "linkedin" ) );
+                    editor.putString( "resumeId", data.getJSONObject( "resume" ).getString( "id" ) );
+                    editor.putString( "id", data.getString( "id" ) );
+                    editor.putBoolean( "hasAuthed", true );
 
                     editor.apply();
 
                     loadEvents();
 
-                } catch (JSONException e) {
+                } catch ( JSONException e ) {
                     e.printStackTrace();
                 }
             }
         },
                 new Response.ErrorListener() {
                     @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Sorry, please try again.", Toast.LENGTH_SHORT).show();
-                        loginButton.setClickable(true);
+                    public void onErrorResponse( VolleyError error ) {
+                        Toast.makeText( getApplicationContext(), "Sorry, please try again.", Toast.LENGTH_SHORT ).show();
+                        loginButton.setClickable( true );
                     }
-                }) {
+                } ) {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 Map<String, String> headers = new HashMap<>();
-                headers.put("Authorization", sharedPreferences.getString("auth", ""));
+                headers.put( "Authorization", sharedPreferences.getString( "auth", "" ) );
                 return headers;
             }
         };
 
-        JsonObjectRequest loginRequest = new JsonObjectRequest(Request.Method.POST,
-                APIHelper.authEndpoint, new JSONObject(params),
+        JsonObjectRequest loginRequest = new JsonObjectRequest( Request.Method.POST,
+                APIHelper.authEndpoint, new JSONObject( params ),
                 new Response.Listener<JSONObject>() {
                     @Override
-                    public void onResponse(JSONObject response) {
+                    public void onResponse( JSONObject response ) {
                         try {
-                            String authKey = response.getJSONObject("data").getString("auth");
+                            String authKey = response.getJSONObject( "data" ).getString( "auth" );
 
-                            editor.putString("auth", authKey);
+                            editor.putString( "auth", authKey );
                             editor.apply();
 
-                            requestManager.addToRequestQueue(userRequest);
-                        } catch (JSONException e) {
+                            requestManager.addToRequestQueue( userRequest );
+                        } catch ( JSONException e ) {
                             e.printStackTrace();
                             // TODO Do something here.
-                            loginButton.setClickable(true);
+                            loginButton.setClickable( true );
                         }
                     }
                 },
 
                 new Response.ErrorListener() {
                     @Override
-                    public void onErrorResponse(VolleyError error) {
-                        loadingView.setVisibility(View.GONE);
-                        incorrectText.setVisibility(View.VISIBLE);
-                        loginButton.setClickable(true);
+                    public void onErrorResponse( VolleyError error ) {
+                        loadingView.setVisibility( View.GONE );
+                        incorrectText.setVisibility( View.VISIBLE );
+                        loginButton.setClickable( true );
                     }
                 }
         );
 
-        requestManager.addToRequestQueue(loginRequest);
+        requestManager.addToRequestQueue( loginRequest );
     }
 
     private void moveOn() {
-        Intent intent = new Intent(this, MainActivity.class);
-        startActivity(intent);
+        Intent intent = new Intent( this, MainActivity.class );
+        startActivity( intent );
         this.finish();
     }
 
     private void loadEvents() {
-        EventManager.sync(getApplicationContext(), new Response.Listener<JSONObject>() {
+        EventManager.sync( getApplicationContext(), new Response.Listener<JSONObject>() {
             @Override
-            public void onResponse(JSONObject response) {
+            public void onResponse( JSONObject response ) {
                 moveOn();
             }
-        });
+        } );
     }
 }
